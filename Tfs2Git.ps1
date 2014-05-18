@@ -4,6 +4,7 @@
 # Contributions from:
 # - Patrick Slagmeulen
 # - Tim Kellogg (timothy.kellogg@gmail.com)
+# - Will 保哥 (doggy.huang@gmail.com)
 #
 # Assumptions:
 # - MSysgit is installed and in the PATH 

@@ -1,4 +1,9 @@
 
+主要說明
+--------
+
+支援正體中文版的 TFS2GIT.ps1 指令檔。
+
 Instructions on how to use this script can be found at 
 http://walkingthestack.blogspot.com/2010/09/importing-tfs-repository-into-git.html
 
@@ -6,25 +11,28 @@ http://walkingthestack.blogspot.com/2010/09/importing-tfs-repository-into-git.ht
 --------
 
 -TFSRepository (必要的)
-The TFS repository you wish to import. Ie. $/repository. 
+請設定你想要匯入 GIT 的 TFS 儲存庫，例如：$/repository. 
 
--GitRepository (optional)
-The name you want to give the Git repository. If no parameter is supplied, the default name will 'ConvertedFromTFS'.
+-GitRepository (選項)
+請設定你想要建立的 GIT 儲存庫名稱(資料夾名稱)，若未輸入預設為 'ConvertedFromTFS.git'
 
--WorkSpaceName (optional)
-During the import a temporary TFS workspace will be created. You can specify the name you wish to use for this workspace. Default 'TFS2GIT'.
+-Collection (選項)
+請設定你目前的集合網址(FQDN)
 
--StartingCommit (optional)
+-WorkSpaceName (選項)
+在匯入期間，預設會在本地建立一個工作區，你可以指定工作區名稱，預設為 'TFS2GIT'
+
+-StartingCommit (選項)
 You can import a sequential range of commits. Specify the first TFS commit you want to import.
 When this parameter is used, EndingCommit must also be used.
 
--EndingCommit (optional)
+-EndingCommit (選項)
 You can import a sequential range of commits. Specify the last TFS commit you want to import.
 When this parameter is used, StartingCommit must also be used.
 
--UserMappingFile (optional)
-The script can convert TFS user accounts to Git accounts. For this to work you need to specify a user mapping file.
-See the content of 'usermappings.txt' for an example.
+-UserMappingFile (選項)
+通常你需要指定一個「使用者對應檔」用以轉換 TFS 上人員的身分到 GIT 版控中。
+請查看 'userMappings.txt' 範例檔案。
 
 
 使用範例
@@ -49,3 +57,8 @@ See the content of 'usermappings.txt' for an example.
 完整範例
 
 	Tfs2Git.ps1 -TFSRepository $/DoggyENS -WorkspaceName DoggyENS -GitRepository DoggyENS.git -UserMappingFile .\userMappings.txt
+
+感謝
+----
+
+此工具基於 Wilbert van Dolleweerd (wilbert@arentheym.com) 的 [WilbertOnGithub/TFS2GIT](https://github.com/WilbertOnGithub/TFS2GIT) 專案進行延伸開發。
