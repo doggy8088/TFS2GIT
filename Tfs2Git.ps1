@@ -1,4 +1,4 @@
-# Script that copies the history of an entire Team Foundation Server repository to a Git repository.
+﻿# Script that copies the history of an entire Team Foundation Server repository to a Git repository.
 # Original author: Wilbert van Dolleweerd (wilbert@arentheym.com)
 #
 # Contributions from:
@@ -13,7 +13,7 @@ Param
 (
 	[Parameter(Mandatory = $True)]
 	[string]$TFSRepository,
-	[string]$GitRepository = "ConvertedFromTFS",
+	[string]$GitRepository = "ConvertedFromTFS.git",
 	[string]$WorkspaceName = "TFS2GIT",
     [string]$Collection = "http://tfs2010:8080/tfs/DefaultCollection",
 	[int]$StartingCommit,
@@ -257,12 +257,22 @@ function Convert ([array]$ChangeSets)
         }
 
 		$CommitMsg = Get-Content $CommitMessageFileName		
-		$Match = ([regex]'(User|�ϥΪ�): (\S+)').Match($commitMsg)
-		if ($UserMapping.Count -gt 0 -and $Match.Success -and $UserMapping.ContainsKey($Match.Groups[2].Value)) 
+		$Match_User = ([regex]'(User|使用者): (\S+)').Match($commitMsg)
+        $Match_Date = ([regex]'(日期): (\d{4})年(\d{1,2})月(\d{1,2})日 (上午|下午) (\d{1,2}):(\d{1,2}):(\d{1,2})').Match($commitMsg)
+    
+        $Hour = $Match_Date.Groups[6].Value;
+
+        if ($Match_Date.Groups[5].Value -eq "上午") {
+            $Hour = ([int]$Match_Date.Groups[6].Value + 12).ToString("00")
+        }
+
+        $CommitDate = $Match_Date.Groups[2].Value + "-" + $Match_Date.Groups[3].Value + "-" + $Match_Date.Groups[4].Value + "T" + $Hour + ":" + $Match_Date.Groups[7].Value + ":" + $Match_Date.Groups[8].Value;
+
+		if ($UserMapping.Count -gt 0 -and $Match_User.Success -and $UserMapping.ContainsKey($Match_User.Groups[2].Value)) 
 		{	
-			$Author = $userMapping[$Match.Groups[2].Value]
+			$Author = $userMapping[$Match_User.Groups[2].Value]
 			Write-Host "Found user" $Author "in user mapping file."
-			git commit --file $CommitMessageFileName --author "$Author" | Out-Null									
+			git commit --file $CommitMessageFileName --author "$Author" --date "$CommitDate" | Out-Null									
 		}
 		else 
 		{	
@@ -270,7 +280,7 @@ function Convert ([array]$ChangeSets)
 			{
 				$GitUserName = git config user.name
 				$GitUserEmail = git config user.email				
-				Write-Host "Could not find user" $Match.Groups[2].Value "in user mapping file. The default configured user" $GitUserName $GitUserEmail "will be used for this commit."
+				Write-Host "Could not find user" $Match_User.Groups[2].Value "in user mapping file. The default configured user" $GitUserName $GitUserEmail "will be used for this commit."
 			}
 			git commit --file $CommitMessageFileName | Out-Null
 		}

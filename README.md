@@ -1,9 +1,11 @@
+
 Instructions on how to use this script can be found at 
 http://walkingthestack.blogspot.com/2010/09/importing-tfs-repository-into-git.html
 
-Available parameters for this script:
+參數說明
+--------
 
--TFSRepository (mandatory)
+-TFSRepository (必要的)
 The TFS repository you wish to import. Ie. $/repository. 
 
 -GitRepository (optional)
@@ -25,21 +27,25 @@ The script can convert TFS user accounts to Git accounts. For this to work you n
 See the content of 'usermappings.txt' for an example.
 
 
-Examples:
-Converting a TFS repository with full history
+使用範例
+--------
 
-TFS2GIT.ps1 $/repository
+套用預設值
 
-or
+	TFS2GIT.ps1 $/repository
 
-TFS2GIT.ps1 -TFSRepository $/repository
+或
 
+	TFS2GIT.ps1 -TFSRepository $/repository
 
-Converting a TFS repository with a limited history
+指定特定版本範圍
 
-TFS2GIT.ps1 -TFSRepository $/repository -StartingCommit 1 -EndingCommit 100
+	TFS2GIT.ps1 -TFSRepository $/repository -StartingCommit 1 -EndingCommit 100
 
+指定使用者對應檔
 
-Converting a TFS repository while using a usermapping file
+	TFS2GIT.ps1 -TFSRepository $/repository -UserMappingfile filename
 
-TFS2GIT.ps1 -TFSRepository $/repository -UserMappingfile filename
+完整範例
+
+	Tfs2Git.ps1 -TFSRepository $/DoggyENS -WorkspaceName DoggyENS -GitRepository DoggyENS.git -UserMappingFile .\userMappings.txt
