@@ -1,4 +1,3 @@
-# These are user mappings. The format is
 #
 # tfs-user=Git User Name <gituser@example.com>
 #
@@ -7,4 +6,5 @@
 #
 # i.e. .\Tfs2Git.ps1 $/Sherpa -UserMappingFile userMappings.txt
 
-BC2SCX46=Wilbert van Dolleweerd <wilbert@arentheym.com>
+DC1\will=Will Huang <will@example.com>
+DC1\thor=Thor Chen <thor@miniasp.com>

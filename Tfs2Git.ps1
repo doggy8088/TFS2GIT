@@ -15,6 +15,7 @@ Param
 	[string]$TFSRepository,
 	[string]$GitRepository = "ConvertedFromTFS",
 	[string]$WorkspaceName = "TFS2GIT",
+    [string]$Collection = "http://tfs2010:8080/tfs/DefaultCollection",
 	[int]$StartingCommit,
 	[int]$EndingCommit,
 	[string]$UserMappingFile
@@ -116,10 +117,11 @@ function GetSpecifiedRangeFromHistory
 	return $FilteredChangeSets
 }
 
+$script:TempDir = [System.Guid]::NewGuid().ToString()
 
 function GetTemporaryDirectory
 {
-	return $env:temp + "\workspace"
+	return $env:temp + "\$script:TempDir"
 }
 
 # Creates a hashtable with the user account name as key and the name/email address as value
@@ -157,10 +159,10 @@ function PrepareWorkspace
 	md $TempDir | Out-null
 
 	# Create the workspace and map it to the temporary directory we just created.
-	tf workspace /delete $WorkspaceName /noprompt
-	tf workspace /new /noprompt /comment:"Temporary workspace for converting a TFS repository to Git" $WorkspaceName
-	tf workfold /unmap /workspace:$WorkspaceName $/
-	tf workfold /map /workspace:$WorkspaceName $TFSRepository $TempDir
+	tf workspace /collection:$Collection /delete $WorkspaceName /noprompt
+	tf workspace /collection:$Collection /new /noprompt /comment:"Temporary workspace for converting a TFS repository to Git" $WorkspaceName
+	tf workfold /collection:$Collection /unmap /workspace:$WorkspaceName $/
+	tf workfold /collection:$Collection /map /workspace:$WorkspaceName $TFSRepository $TempDir
 }
 
 
@@ -170,7 +172,7 @@ function GetAllChangesetsFromHistory
 {
 	$HistoryFileName = "history.txt"
 
-	tf history $TFSRepository /recursive /noprompt /format:brief | Out-File $HistoryFileName
+	tf history /collection:$Collection $TFSRepository /recursive /noprompt /format:brief | Out-File $HistoryFileName
 
 	# Necessary, because Powershell has some 'issues' with current directory. 
 	# See http://huddledmasses.org/powershell-power-user-tips-current-directory/
@@ -207,7 +209,10 @@ function Convert ([array]$ChangeSets)
 
 	# Let git disregard casesensitivity for this repository (make it act like Windows).
 	# Prevents problems when someones only changes case on a file or directory.
+    pushd
+    cd $TemporaryDirectory
 	git config core.ignorecase true
+    popd
 
 	# If we use this option, read the usermapping file.
 	if ($UserMappingFile)
@@ -245,15 +250,19 @@ function Convert ([array]$ChangeSets)
 
 		# We don't want the commit message to be included, so we remove it from the index.
 		# Not from the working directory, because we need it in the commit command.
-		git rm $CommitMessageFileName --cached --force		
+        if (Test-Path $CommitMessageFileName)
+        {
+			echo "CommitMessageFileName: $CommitMessageFileName"
+            git rm $CommitMessageFileName --cached --force --ignore-unmatch
+        }
 
 		$CommitMsg = Get-Content $CommitMessageFileName		
-		$Match = ([regex]'User: (\w+)').Match($commitMsg)
-		if ($UserMapping.Count -gt 0 -and $Match.Success -and $UserMapping.ContainsKey($Match.Groups[1].Value)) 
+		$Match = ([regex]'(User|¨Ï¥ÎªÌ): (\S+)').Match($commitMsg)
+		if ($UserMapping.Count -gt 0 -and $Match.Success -and $UserMapping.ContainsKey($Match.Groups[2].Value)) 
 		{	
-			$Author = $userMapping[$Match.Groups[1].Value]
+			$Author = $userMapping[$Match.Groups[2].Value]
 			Write-Host "Found user" $Author "in user mapping file."
-			git commit --file $CommitMessageFileName --author $Author | Out-Null									
+			git commit --file $CommitMessageFileName --author "$Author" | Out-Null									
 		}
 		else 
 		{	
@@ -261,7 +270,7 @@ function Convert ([array]$ChangeSets)
 			{
 				$GitUserName = git config user.name
 				$GitUserEmail = git config user.email				
-				Write-Host "Could not find user" $Match.Groups[1].Value "in user mapping file. The default configured user" $GitUserName $GitUserEmail "will be used for this commit."
+				Write-Host "Could not find user" $Match.Groups[2].Value "in user mapping file. The default configured user" $GitUserName $GitUserEmail "will be used for this commit."
 			}
 			git commit --file $CommitMessageFileName | Out-Null
 		}
@@ -272,7 +281,7 @@ function Convert ([array]$ChangeSets)
 # Retrieve the commit message for a specific changeset
 function GetCommitMessage ([string]$ChangeSet, [string]$CommitMessageFileName)
 {	
-	tf changeset $ChangeSet /noprompt | Out-File $CommitMessageFileName -encoding utf8
+	tf changeset /collection:$Collection $ChangeSet /noprompt | Out-File $CommitMessageFileName -encoding utf8
 }
 
 # Clone the repository to the directory where you started the script.
@@ -285,7 +294,7 @@ function CloneToLocalBareRepository
 	{
 		remove-item -path $GitRepository -force -recurse		
 	}
-	git clone --bare $TemporaryDirectory $GitRepository
+	git clone --bare --quiet $TemporaryDirectory $GitRepository
 	$(Get-Item -force $GitRepository).Attributes = "Normal"
 	Write-Host "Your converted (bare) repository can be found in the" $GitRepository "directory."
 }
@@ -296,7 +305,7 @@ function CleanUp
 	$TempDir = GetTemporaryDirectory
 
 	Write-Host "Removing workspace from TFS"
-	tf workspace /delete $WorkspaceName /noprompt
+	tf workspace /collection:$Collection /delete $WorkspaceName /noprompt
 
 	Write-Host "Removing working directories in" $TempDir
 	Remove-Item -path $TempDir -force -recurse
@@ -308,7 +317,7 @@ function CleanUp
 # This is where all the fun starts...
 function Main
 {
-	CheckPath("git.cmd")
+	CheckPath("git.exe")
 	CheckPath("tf.exe")
 	CheckParameters
 	PrepareWorkspace
