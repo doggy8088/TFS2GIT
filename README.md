@@ -7,6 +7,30 @@
 Instructions on how to use this script can be found at 
 http://walkingthestack.blogspot.com/2010/09/importing-tfs-repository-into-git.html
 
+使用範例
+--------
+
+套用預設值
+
+	TFS2GIT.ps1 $/repository
+
+或
+
+	TFS2GIT.ps1 -TFSRepository $/repository
+
+指定特定版本範圍
+
+	TFS2GIT.ps1 -TFSRepository $/repository -StartingCommit 1 -EndingCommit 100
+
+指定使用者對應檔
+
+	TFS2GIT.ps1 -TFSRepository $/repository -UserMappingfile filename
+
+完整範例
+
+	Tfs2Git.ps1 -TFSRepository $/DoggyENS -WorkspaceName DoggyENS -GitRepository DoggyENS.git -UserMappingFile .\userMappings.txt
+
+
 參數說明
 --------
 
@@ -34,29 +58,16 @@ When this parameter is used, StartingCommit must also be used.
 通常你需要指定一個「使用者對應檔」用以轉換 TFS 上人員的身分到 GIT 版控中。
 請查看 'userMappings.txt' 範例檔案。
 
+userMappings.txt 注意事項
+----------------------------------
 
-使用範例
---------
-
-套用預設值
-
-	TFS2GIT.ps1 $/repository
-
-或
-
-	TFS2GIT.ps1 -TFSRepository $/repository
-
-指定特定版本範圍
-
-	TFS2GIT.ps1 -TFSRepository $/repository -StartingCommit 1 -EndingCommit 100
-
-指定使用者對應檔
-
-	TFS2GIT.ps1 -TFSRepository $/repository -UserMappingfile filename
-
-完整範例
-
-	Tfs2Git.ps1 -TFSRepository $/DoggyENS -WorkspaceName DoggyENS -GitRepository DoggyENS.git -UserMappingFile .\userMappings.txt
+* 格式: ```TFS帳號=GIT帳號```
+* TFS帳號可能的格式:
+	* 本機帳號: will
+	* 網域帳號: DC1\will
+* GIT帳號的格式:
+	* ```姓名``` &lt;```EMAIL```&gt;
+	* 注意: **姓名** 與 **&lt;** 之間一定要加上一個空白字元，否則會無法建立版本。
 
 感謝
 ----
